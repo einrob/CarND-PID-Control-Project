@@ -1,6 +1,10 @@
 #ifndef PID_H
 #define PID_H
 
+#include <algorithm>
+#include <iostream>
+
+
 class PID {
  public:
   /**
@@ -45,6 +49,11 @@ class PID {
   double Kp;
   double Ki;
   double Kd;
+
+  double total_error;
+
+  double sum_cte;
+  double cte_prev;
 };
 
 #endif  // PID_H

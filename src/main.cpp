@@ -2,6 +2,7 @@
 #include <uWS/uWS.h>
 #include <iostream>
 #include <string>
+#include <fstream>
 #include "json.hpp"
 #include "PID.h"
 
@@ -33,13 +34,40 @@ string hasData(string s) {
 int main() {
   uWS::Hub h;
 
-  PID pid;
+  PID pid_steer;
+
+  pid_steer.Init(0.5,  0.0,  14.0); // @param (Kp_, Ki_, Kd_)
+
+
+  PID pid_velocity;
+  pid_velocity.Init(0.10,  0.0015,  0.0); // @param (Kp_, Ki_, Kd_)
+
+
+  std::ofstream steering_pid_log;
+  std::ofstream speed_pid_log;
+
+  steering_pid_log.open("steering_pid_run.csv");
+  speed_pid_log.open("speed_pid_run.csv");
+
+
+  double max_speed = 20;
+  double target_speed = 0;
+
+  double wait_after_spawn_counter = 8;
+
+
   /**
    * TODO: Initialize the pid variable.
    */
 
-  h.onMessage([&pid](uWS::WebSocket<uWS::SERVER> ws, char *data, size_t length, 
+  h.onMessage([&pid_steer, &pid_velocity, &steering_pid_log, &speed_pid_log, &target_speed, &max_speed, &wait_after_spawn_counter](uWS::WebSocket<uWS::SERVER> ws, char *data, size_t length,
                      uWS::OpCode opCode) {
+
+
+	  double total_error = 0;
+	  double throttle_pos = 0;
+
+
     // "42" at the start of the message means there's a websocket message event.
     // The 4 signifies a websocket message
     // The 2 signifies a websocket event
@@ -64,13 +92,67 @@ int main() {
            *   Maybe use another PID controller to control the speed!
            */
           
-          // DEBUG
-          std::cout << "CTE: " << cte << " Steering Value: " << steer_value 
-                    << std::endl;
+
+          if(wait_after_spawn_counter>0)
+          {
+        	  steer_value = 0;
+        	  throttle_pos = 0;
+        	  wait_after_spawn_counter -= 1;
+          }
+          else
+          {
+        	   // DEBUG
+			  std::cout << "CTE: " << cte << " Steering Value: " << steer_value
+						<< std::endl;
+
+			  pid_steer.UpdateError(cte);
+
+			  total_error = pid_steer.TotalError();
+
+			  total_error = std::max(-1.0, std::min(total_error, 1.0)); // https://stackoverflow.com/questions/9323903/most-efficient-elegant-way-to-clip-a-number clipping a variable
+
+			  steering_pid_log << cte << "," << total_error << std::endl;
+
+			  std::cout << "PID steer error: " << total_error << std::endl;
+
+			  steer_value =  -total_error;
+
+			  target_speed = (max_speed * (1 - sqrt(steer_value*steer_value)));
+
+
+			  std::cout << " -------------- target_speed: " << target_speed << "Steering value: " << steer_value <<" scaler: " << (1 - sqrt(steer_value*steer_value)) << std::endl;
+
+
+			  double speed_error = target_speed - speed;
+			  pid_velocity.UpdateError(speed_error);
+
+			  throttle_pos = pid_velocity.TotalError();
+
+			  std::cout << "PID total throttle pos: " << throttle_pos << std::endl;
+
+
+			  throttle_pos = std::max(-1.0, std::min(throttle_pos, 1.0));
+
+			  std::cout << throttle_pos << std::endl;
+			  std::cout << "PID throttle pos: " << throttle_pos << std::endl;
+
+			  speed_pid_log << speed_error << "," << throttle_pos << std::endl;
+          }
+
+
+
+
+
+
 
           json msgJson;
           msgJson["steering_angle"] = steer_value;
-          msgJson["throttle"] = 0.3;
+          msgJson["throttle"] = throttle_pos;
+
+
+
+
+
           auto msg = "42[\"steer\"," + msgJson.dump() + "]";
           std::cout << msg << std::endl;
           ws.send(msg.data(), msg.length(), uWS::OpCode::TEXT);
