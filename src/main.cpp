@@ -36,12 +36,11 @@ int main() {
 
   PID pid_steer;
 
-  pid_steer.Init(0.18,  0.0001,  10.0, true); // @param (Kp_, Ki_, Kd_)
-
+  pid_steer.Init(0.185,  0.0005,  0.0025, true); // @param (Kp_, Ki_, Kd_)
 
   PID pid_velocity;
-  pid_velocity.Init(0.10,  0.0015,  0.0, false); // @param (Kp_, Ki_, Kd_)
 
+  pid_velocity.Init(0.01,  0.000015,  0.00, false); // @param (Kp_, Ki_, Kd_)
 
   std::ofstream steering_pid_log;
   std::ofstream speed_pid_log;
@@ -117,8 +116,8 @@ int main() {
 
 			  steer_value =  -total_error;
 
-			  target_speed = (max_speed * (1 - sqrt(steer_value*steer_value)));
-
+			  //target_speed = (max_speed * (1 - sqrt(steer_value*steer_value)));
+			  target_speed = max_speed; 
 
 			  //std::cout << " -------------- target_speed: " << target_speed << "Steering value: " << steer_value <<" scaler: " << (1 - sqrt(steer_value*steer_value)) << std::endl;
 

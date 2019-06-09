@@ -40,7 +40,7 @@ void PID::UpdateError(double cte) {
 
 	p_error = cte;
 	i_error = sum_cte;
-	d_error = (cte-cte_prev);  /// divided by time_span !?
+	d_error = ((cte-cte_prev)/0.02);  /// divided by time_span !?
 
 	cte_prev = cte;
 
