@@ -8,7 +8,7 @@ PID::PID() {}
 
 PID::~PID() {}
 
-void PID::Init(double Kp_, double Ki_, double Kd_) {
+void PID::Init(double Kp_, double Ki_, double Kd_, bool show_output_) {
   /**
    * TODO: Initialize PID coefficients (and errors, if needed)
    */
@@ -24,6 +24,8 @@ void PID::Init(double Kp_, double Ki_, double Kd_) {
 	total_error = 0;
 	sum_cte = 0;
 	cte_prev = 0;
+  
+  	show_output = show_output_;
 
 
 }
@@ -42,8 +44,10 @@ void PID::UpdateError(double cte) {
 
 	cte_prev = cte;
 
-
-	std::cout << "p_error: " << p_error << "i_error: " << i_error << "d_error: " << d_error << std::endl;
+	if(show_output == true)
+    {
+      	std::cout << "p_error: " << p_error << "      i_error: " << i_error << "          d_error: " << d_error << std::endl;
+    }
 }
 
 double PID::TotalError() {

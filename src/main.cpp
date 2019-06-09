@@ -36,11 +36,11 @@ int main() {
 
   PID pid_steer;
 
-  pid_steer.Init(0.5,  0.0,  14.0); // @param (Kp_, Ki_, Kd_)
+  pid_steer.Init(0.18,  0.0001,  10.0, true); // @param (Kp_, Ki_, Kd_)
 
 
   PID pid_velocity;
-  pid_velocity.Init(0.10,  0.0015,  0.0); // @param (Kp_, Ki_, Kd_)
+  pid_velocity.Init(0.10,  0.0015,  0.0, false); // @param (Kp_, Ki_, Kd_)
 
 
   std::ofstream steering_pid_log;
@@ -113,14 +113,14 @@ int main() {
 
 			  steering_pid_log << cte << "," << total_error << std::endl;
 
-			  std::cout << "PID steer error: " << total_error << std::endl;
+			  //std::cout << "PID steer error: " << total_error << std::endl;
 
 			  steer_value =  -total_error;
 
 			  target_speed = (max_speed * (1 - sqrt(steer_value*steer_value)));
 
 
-			  std::cout << " -------------- target_speed: " << target_speed << "Steering value: " << steer_value <<" scaler: " << (1 - sqrt(steer_value*steer_value)) << std::endl;
+			  //std::cout << " -------------- target_speed: " << target_speed << "Steering value: " << steer_value <<" scaler: " << (1 - sqrt(steer_value*steer_value)) << std::endl;
 
 
 			  double speed_error = target_speed - speed;
@@ -128,13 +128,13 @@ int main() {
 
 			  throttle_pos = pid_velocity.TotalError();
 
-			  std::cout << "PID total throttle pos: " << throttle_pos << std::endl;
+			  //std::cout << "PID total throttle pos: " << throttle_pos << std::endl;
 
 
 			  throttle_pos = std::max(-1.0, std::min(throttle_pos, 1.0));
 
 			  std::cout << throttle_pos << std::endl;
-			  std::cout << "PID throttle pos: " << throttle_pos << std::endl;
+			  //std::cout << "PID throttle pos: " << throttle_pos << std::endl;
 
 			  speed_pid_log << speed_error << "," << throttle_pos << std::endl;
           }
