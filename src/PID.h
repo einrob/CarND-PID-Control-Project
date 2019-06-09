@@ -29,11 +29,7 @@ class PID {
    */
   void UpdateError(double cte);
 
-  /**
-   * Calculate the total PID error.
-   * @output The total PID error
-   */
-  double TotalError();
+  double GetControlOutput();
 
  private:
   /**
@@ -50,7 +46,7 @@ class PID {
   double Ki;
   double Kd;
 
-  double total_error;
+  double output;
 
   double sum_cte;
   double cte_prev;

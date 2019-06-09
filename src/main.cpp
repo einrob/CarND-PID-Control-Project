@@ -63,7 +63,7 @@ int main() {
                      uWS::OpCode opCode) {
 
 
-	  double total_error = 0;
+	  double steering_pos = 0;
 	  double throttle_pos = 0;
 
 
@@ -91,7 +91,8 @@ int main() {
            *   Maybe use another PID controller to control the speed!
            */
           
-
+          // Waiting some time before activating the controllers until car hits the ground 
+          // and is stable 
           if(wait_after_spawn_counter>0)
           {
         	  steer_value = 0;
@@ -105,52 +106,39 @@ int main() {
 						<< std::endl;
 
 			  pid_steer.UpdateError(cte);
-
-			  total_error = pid_steer.TotalError();
-
-			  total_error = std::max(-1.0, std::min(total_error, 1.0)); // https://stackoverflow.com/questions/9323903/most-efficient-elegant-way-to-clip-a-number clipping a variable
-
-			  steering_pid_log << cte << "," << total_error << std::endl;
-
-			  //std::cout << "PID steer error: " << total_error << std::endl;
-
-			  steer_value =  -total_error;
-
+			  steering_pos = pid_steer.GetControlOutput();
+			  steering_pos = std::max(-1.0, std::min(steering_pos, 1.0)); // https://stackoverflow.com/questions/9323903/most-efficient-elegant-way-to-clip-a-number clipping a variable
+			  // Writing log files to visualize outputs with python 
+              steering_pid_log << cte << "," << steering_pos << std::endl;
+			  steer_value =  -steering_pos;
+				
+              // Tried to scale the target speed according to the set steering angle. But sometimes the simlation just stopped, 
+              // while throttle pos was 1 and the control application tied to send next commands. 
 			  //target_speed = (max_speed * (1 - sqrt(steer_value*steer_value)));
-			  target_speed = max_speed; 
+			
+            // On the online simualation my parameters tuned on my local machine did not work well. 
+            // Because the steering controll worked much better online than on my local machine, 
+            // it was not neccessary to control the speed anymore. So I could be also set to a costant 
+            // throttle position too. 
+            
+              target_speed = max_speed; 
 
 			  //std::cout << " -------------- target_speed: " << target_speed << "Steering value: " << steer_value <<" scaler: " << (1 - sqrt(steer_value*steer_value)) << std::endl;
 
-
 			  double speed_error = target_speed - speed;
 			  pid_velocity.UpdateError(speed_error);
-
-			  throttle_pos = pid_velocity.TotalError();
-
-			  //std::cout << "PID total throttle pos: " << throttle_pos << std::endl;
-
-
+			  throttle_pos = pid_velocity.GetControlOutput();
 			  throttle_pos = std::max(-1.0, std::min(throttle_pos, 1.0));
-
-			  std::cout << throttle_pos << std::endl;
-			  //std::cout << "PID throttle pos: " << throttle_pos << std::endl;
-
+   			  // Writing log files to visualize outputs with python 
 			  speed_pid_log << speed_error << "," << throttle_pos << std::endl;
+       
+              // Alternatively I could set a constant throttle position. I got good results up to 16mph. Not the fastest, but ok           
+              //throttle_pos = 0.15; 
           }
-
-
-
-
-
-
 
           json msgJson;
           msgJson["steering_angle"] = steer_value;
           msgJson["throttle"] = throttle_pos;
-
-
-
-
 
           auto msg = "42[\"steer\"," + msgJson.dump() + "]";
           std::cout << msg << std::endl;
